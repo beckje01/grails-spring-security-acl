@@ -131,11 +131,12 @@ class AclService implements MutableAclService {
 		Assert.notNull objectIdentity, 'Object Identity required'
 		Assert.notNull objectIdentity.identifier, "Object Identity doesn't provide an identifier"
 
-		if (deleteChildren) {
-			for (child in findChildren(objectIdentity)) {
-				deleteAcl child, true
-			}
-		}
+		//Don't delete any kids as we don't have them and cpu
+//		if (deleteChildren) {
+//			for (child in findChildren(objectIdentity)) {
+//				deleteAcl child, true
+//			}
+//		}
 
 		AclObjectIdentity oid = retrieveObjectIdentity(objectIdentity)
 
@@ -194,8 +195,9 @@ class AclService implements MutableAclService {
 		// Change the mutable columns in acl_object_identity
 		updateObjectIdentity acl
 
-		// Clear the cache, including children
-		clearCacheIncludingChildren acl.objectIdentity
+		// Clear the cache, no kids for now because cpu and we don't use them
+		//clearCacheIncludingChildren acl.objectIdentity
+		aclCache.evictFromCache(acl.objectIdentity)
 
 		return readAclById(acl.objectIdentity)
 	}
@@ -236,6 +238,7 @@ class AclService implements MutableAclService {
 	}
 
 	protected void clearCacheIncludingChildren(ObjectIdentity objectIdentity) {
+		log.warn(",key=acl_service_find_children, message=clearCacheIncludingChildren_called_bad")
 		Assert.notNull objectIdentity, 'ObjectIdentity required'
 		for (child in findChildren(objectIdentity)) {
 			clearCacheIncludingChildren child
@@ -249,6 +252,7 @@ class AclService implements MutableAclService {
 	 * 	org.springframework.security.acls.model.ObjectIdentity)
 	 */
 	List<ObjectIdentity> findChildren(ObjectIdentity parentOid) {
+		log.warn(",key=acl_service_find_children, message=findChildrenCalled__BadjoinComing")
 		def children = AclObjectIdentity.withCriteria {
 			parent {
 				eq 'objectId', parentOid.identifier
